@@ -4,10 +4,12 @@ package suryagaddipati.jenkinsdockerslaves;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.ExecCreateCmdResponse;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.github.dockerjava.api.exception.InternalServerErrorException;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
+import com.github.dockerjava.core.command.ExecStartResultCallback;
 import hudson.model.AbstractProject;
 import hudson.model.Computer;
 import hudson.model.Queue;
@@ -99,8 +101,12 @@ public class DockerComputerLauncher extends ComputerLauncher {
                 dockerSlaveInfo.setContainerInfo(containerInfo[0]);
 
                 dockerClient.startContainerCmd(container.getId()).exec();
-                dockerClient.execCreateCmd(container.getId())
-                        .withCmd(command).exec();
+
+                ExecCreateCmdResponse execCreateCmdResponse = dockerClient.execCreateCmd(container.getId())
+                        .withAttachStdout(true).withCmd(command).exec();
+                dockerClient.execStartCmd(execCreateCmdResponse.getId()).exec(
+                        new ExecStartResultCallback(listener.getLogger(), listener.getLogger()));
+
                 computer.setContainerId(container.getId());
                 dockerSlaveInfo.setProvisionedTime(new Date());
                 computer.connect(false).get();
