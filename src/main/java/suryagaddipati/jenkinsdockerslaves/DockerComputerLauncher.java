@@ -69,7 +69,6 @@ public class DockerComputerLauncher extends ComputerLauncher {
 
                 CreateContainerCmd containerCmd = dockerClient
                         .createContainerCmd(labelConfiguration.getImage())
-                        .withCmd(command)
                         .withPrivileged(configuration.isPrivileged())
                         .withName(computer.getName());
 
@@ -100,6 +99,8 @@ public class DockerComputerLauncher extends ComputerLauncher {
                 dockerSlaveInfo.setContainerInfo(containerInfo[0]);
 
                 dockerClient.startContainerCmd(container.getId()).exec();
+                dockerClient.execCreateCmd(container.getId())
+                        .withCmd(command).exec();
                 computer.setContainerId(container.getId());
                 dockerSlaveInfo.setProvisionedTime(new Date());
                 computer.connect(false).get();
